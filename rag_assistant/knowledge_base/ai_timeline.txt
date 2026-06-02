@@ -1,0 +1,58 @@
+AI MILESTONES: A TIMELINE OF MODERN ARTIFICIAL INTELLIGENCE
+=============================================================
+
+FOUNDATIONS (1950s–2000s)
+--------------------------
+1950 — Alan Turing publishes "Computing Machinery and Intelligence," proposing the Turing Test as an operational definition of machine intelligence and establishing the conceptual framing for AI research.
+
+1956 — The Dartmouth Summer Research Project on Artificial Intelligence coins the term "artificial intelligence." Attendees including John McCarthy, Marvin Minsky, Claude Shannon, and Nathaniel Rochester lay the foundation for AI as an academic discipline.
+
+1966 — ELIZA, developed by Joseph Weizenbaum at MIT, demonstrates rudimentary natural language conversation using pattern matching and scripted responses. The DOCTOR script simulates a Rogerian psychotherapist and unexpectedly reveals human tendencies to anthropomorphize conversational systems.
+
+1997 — IBM's Deep Blue defeats world chess champion Garry Kasparov in a six-game match, marking the first time a computer system defeated a reigning world champion under standard tournament conditions. The achievement demonstrates the power of specialized search algorithms and evaluation functions in constrained domains.
+
+2012 — AlexNet, a deep convolutional neural network developed by Krizhevsky, Sutskever, and Hinton, wins the ImageNet Large Scale Visual Recognition Challenge by a significant margin over competing methods. This result catalyzes widespread adoption of deep learning and GPUs for AI research and establishes neural networks as the dominant paradigm in computer vision.
+
+THE DEEP LEARNING ERA (2013–2016)
+----------------------------------
+2013 — Word2Vec demonstrates that dense word embeddings trained with shallow neural networks capture rich semantic structure. The technique becomes a standard component of NLP pipelines.
+
+2014 — Generative Adversarial Networks (GANs) are introduced by Ian Goodfellow and colleagues, establishing a new paradigm for generative modeling in which a generator and discriminator network are trained in opposition. GANs become foundational to image synthesis research over the following decade.
+
+2014 — Sequence-to-sequence learning with neural networks (Sutskever, Vinyals, Le) demonstrates end-to-end neural machine translation, setting the stage for attention mechanisms and eventually the transformer.
+
+ALPHAGO AND REINFORCEMENT LEARNING BREAKTHROUGHS
+--------------------------------------------------
+2016 — DeepMind's AlphaGo defeats Lee Sedol, one of the world's top Go players, 4–1 in a match held in Seoul. Go had been considered computationally intractable for machines due to its enormous search space (approximately 10^170 legal positions). AlphaGo combines deep convolutional neural networks for position evaluation with Monte Carlo tree search, trained initially via supervised learning on human expert games and refined through reinforcement learning via self-play.
+
+2017 — AlphaGo Zero surpasses AlphaGo's performance while learning exclusively through self-play from random initialization, without any human game data. This result demonstrates that highly capable AI systems can be developed without human domain knowledge as a starting point, raising significant implications for the generality of reinforcement learning approaches.
+
+2019 — AlphaStar, DeepMind's StarCraft II agent, achieves Grandmaster level in the full game against human players in live ladder matches. The result demonstrates RL-based AI operating effectively in real-time, imperfect information, multi-agent environments substantially more complex than board games.
+
+THE TRANSFORMER AND LANGUAGE MODEL REVOLUTION (2017–2021)
+----------------------------------------------------------
+2017 — "Attention Is All You Need" (Vaswani et al., Google) introduces the transformer architecture, replacing recurrent models with self-attention and enabling far more parallelizable training. The paper becomes one of the most cited in machine learning history.
+
+2018 — BERT (Google) achieves state-of-the-art results across eleven NLP benchmarks, establishing the pre-train-then-fine-tune paradigm as the dominant approach to NLP. GPT-1 (OpenAI) demonstrates the autoregressive pretraining approach for generative tasks.
+
+2019 — GPT-2 (OpenAI) scales to 1.5 billion parameters and generates coherent long-form text, prompting public discussion about language model misuse and responsible disclosure.
+
+2020 — GPT-3 (OpenAI) introduces 175 billion parameters and demonstrates few-shot in-context learning, showing that large language models can perform new tasks from natural language examples without gradient updates.
+
+DIFFUSION MODELS AND GENERATIVE AI (2021–2022)
+-----------------------------------------------
+2021 — Diffusion probabilistic models emerge as the dominant paradigm for image generation. DALL-E (OpenAI) and later GLIDE demonstrate text-to-image generation with transformer-based language models guiding diffusion processes. Simultaneously, CLIP (OpenAI) establishes powerful vision-language representations by training on image-caption pairs at internet scale.
+
+2022 — Stable Diffusion (Stability AI, in collaboration with LMU Munich and Runway) releases an open-weight latent diffusion model for text-to-image generation. By operating in a compressed latent space rather than pixel space, Stable Diffusion requires significantly less compute than pixel-space diffusion models. Its open release democratizes high-quality image generation and spurs a large ecosystem of applications and fine-tuned variants.
+
+2022 — Midjourney launches in public beta, demonstrating that diffusion-based image generation can be commercially deployed for creative professionals. Together with Stable Diffusion and DALL-E 2, it catalyzes significant public and policy attention to AI-generated imagery, copyright, and creative labor.
+
+THE CHATGPT MOMENT AND MULTIMODAL AI (2022–PRESENT)
+-----------------------------------------------------
+November 2022 — ChatGPT (OpenAI) launches, applying instruction tuning and RLHF to GPT-3.5 to produce a broadly capable conversational assistant. It reaches one million users in five days and one hundred million users in two months, becoming the fastest-growing consumer application in recorded history and triggering a wave of competitive AI investment and deployment globally.
+
+March 2023 — GPT-4 (OpenAI) is released with multimodal capabilities, accepting image inputs alongside text. It substantially outperforms GPT-3.5 on professional and academic benchmarks and is integrated into Microsoft's Office suite, Bing search, and developer tools.
+
+2023 — Claude (Anthropic), Gemini (Google DeepMind), and LLaMA (Meta) expand the competitive landscape. Gemini Ultra becomes the first model to exceed human expert performance on MMLU (Massive Multitask Language Understanding) across 57 academic domains. LLaMA and its successors establish high-capability open-weight models, enabling broad academic and commercial experimentation.
+
+2024–2025 — Multimodal AI matures across modalities: real-time voice interaction, video understanding, long-context document processing, and code generation with tool use become broadly available. AI agents — systems that autonomously plan, use tools, and execute multi-step tasks — emerge as a central research and product frontier. Reasoning-specialized models demonstrate improved performance on mathematical olympiad problems and competitive programming tasks through extended chain-of-thought and test-time compute techniques.

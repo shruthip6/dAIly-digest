@@ -2,6 +2,17 @@ import streamlit as st
 import time
 import sys
 
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    message=".*__path__.*zoedepth.*"
+)
+
+from transformers.utils import logging as transformers_logging
+
+transformers_logging.set_verbosity_error()
+
 # Import live backend utility modules from utils/
 from utils.scraper import extract_article
 from utils.summarizer import universal_summarizer
@@ -372,13 +383,86 @@ def render_summarizer_page():
                     
 
 
-# ----------------- PAGE 3: PLACEHOLDER -----------------
-def render_coming_soon(page_name: str):
-    st.subheader(page_name)
-    st.write("---")
-    with st.container(border=True):
-        st.write("### Coming Soon")
-        st.write(f"The {page_name} module is currently in development and will be integrated into the MVP shortly.")
+
+# ----------------- PAGE 4: DIGEST ASSISTANT (RAG) -----------------
+def render_rag_assistant():
+    """Render the lightweight retrieval-grounded assistant UI."""
+    st.subheader("Digest Assistant (RAG)")
+    st.write(
+        "Ask questions about AI developments, companies, trends, and previously ingested AI intelligence."
+    )
+
+    if "rag_previous_query" not in st.session_state:
+        st.session_state.rag_previous_query = ""
+    if "rag_previous_topic" not in st.session_state:
+        st.session_state.rag_previous_topic = ""
+    if "rag_answer" not in st.session_state:
+        st.session_state.rag_answer = None
+    if "rag_sources" not in st.session_state:
+        st.session_state.rag_sources = []
+    if "rag_provider" not in st.session_state:
+        st.session_state.rag_provider = None
+
+    user_query = st.text_input(
+        "Ask the Digest Assistant",
+        placeholder="Example: How did OpenAI influence the LLM ecosystem?"
+    )
+
+    ask_clicked = st.button("Ask Assistant")
+    if ask_clicked:
+        if not user_query.strip():
+            st.warning("Please enter a question for the assistant.")
+        else:
+            try:
+                from rag_assistant.rag_pipeline import answer_ai_query, detect_topic
+            except Exception as exc:
+                st.error(
+                    "RAG dependencies are not available yet. Install chromadb, "
+                    f"sentence-transformers, and langchain, then retry. Details: {exc}"
+                )
+                return
+
+            session_context = {
+                "previous_query": st.session_state.rag_previous_query,
+                "previous_topic": st.session_state.rag_previous_topic
+            }
+
+            with st.spinner("Retrieving relevant AI intelligence and drafting an answer..."):
+                result = answer_ai_query(user_query, session_context=session_context)
+
+            if not result.get("success"):
+                st.error(f"Assistant failed: {result.get('error') or 'Unknown error'}")
+            else:
+                st.session_state.rag_answer = result.get("answer")
+                st.session_state.rag_sources = result.get("sources", [])
+                st.session_state.rag_provider = result.get("provider")
+                st.session_state.rag_previous_query = user_query
+                st.session_state.rag_previous_topic = detect_topic(user_query) or st.session_state.rag_previous_topic
+
+    if st.session_state.rag_answer:
+        st.write("")
+        with st.container(border=True):
+            st.markdown("**Assistant Response**")
+            st.write(st.session_state.rag_answer)
+            if st.session_state.rag_provider:
+                st.caption(f"Routed LLM: {st.session_state.rag_provider}")
+
+        if st.session_state.rag_sources:
+            st.write("### Retrieved Sources")
+            for source in st.session_state.rag_sources:
+                with st.container(border=True):
+                    st.markdown(f"**{source.get('title') or 'Untitled'}**")
+                    meta = []
+                    if source.get("source"):
+                        meta.append(f"Source: {source.get('source')}")
+                    if source.get("published"):
+                        meta.append(f"Published: {source.get('published')}")
+                    if source.get("similarity") is not None:
+                        meta.append(f"Similarity: {source.get('similarity'):.2f}")
+                    if meta:
+                        st.caption(" | ".join(meta))
+                    if source.get("url"):
+                        st.markdown(f"[Open source]({source.get('url')})")
 
 
 # ----------------- PAGE 4: DAILY DIGEST -----------------
@@ -496,7 +580,7 @@ def main():
     elif page_selection == "Daily AI Digest":
         render_daily_digest()
     elif page_selection == "Digest Assistant (RAG)":
-        render_coming_soon("Digest Assistant (RAG)")
+        render_rag_assistant()
     elif page_selection == "Universal News Summarizer":
         render_summarizer_page()
 

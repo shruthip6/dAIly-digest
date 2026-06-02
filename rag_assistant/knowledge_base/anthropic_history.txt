@@ -1,0 +1,44 @@
+ANTHROPIC: HISTORY, MODELS, AND AI SAFETY PHILOSOPHY
+=====================================================
+
+FOUNDING AND BACKGROUND
+------------------------
+Anthropic was founded in 2021 by Dario Amodei and Daniela Amodei, along with several colleagues who had previously worked at OpenAI. The founding team included Tom Brown (lead author of the GPT-3 paper), Chris Olah (known for mechanistic interpretability research), Sam McCandlish, Jack Clark, and Jared Kaplan, among others. Dario Amodei had served as VP of Research at OpenAI, and the departure of this group reflected both a desire to pursue a different organizational structure and a stronger emphasis on AI safety as a first-order research priority rather than a downstream concern.
+
+Anthropic is structured as a public benefit corporation with an independent Long-Term Benefit Trust designed to oversee the organization's adherence to its mission. The company raised successive funding rounds from investors including Google, Spark Capital, and others, reaching a valuation in the tens of billions of dollars by 2024. Amazon committed up to $4 billion in investment, making AWS a primary cloud infrastructure partner and expanding enterprise distribution.
+
+The organization's stated mission is the responsible development and maintenance of advanced AI for the long-term benefit of humanity. Unlike organizations that treat safety as a constraint on capability development, Anthropic frames safety and capability research as deeply intertwined — the premise being that understanding how powerful AI systems work is prerequisite to making them reliably beneficial.
+
+CONSTITUTIONAL AI
+-----------------
+One of Anthropic's most significant research contributions is Constitutional AI (CAI), introduced in a 2022 paper. Constitutional AI is a method for training AI assistants to be helpful, harmless, and honest by providing the model with a set of written principles — a "constitution" — and using those principles to guide both supervised learning and reinforcement learning phases.
+
+In the supervised learning phase, the model critiques and revises its own outputs according to the constitutional principles, generating improved responses without requiring human labelers to evaluate each individual harmful output. In the reinforcement learning phase, an AI-generated preference model (rather than human raters) scores outputs for adherence to the principles, scaling the alignment process more efficiently than pure human feedback.
+
+Constitutional AI addresses several limitations of standard RLHF: it makes the values being trained explicit and auditable, reduces reliance on large volumes of human feedback for harmful content, and allows the model's behavior to be steered by revising the constitution rather than retraining from scratch. This approach became foundational to how Claude models are trained.
+
+THE CLAUDE MODEL FAMILY
+------------------------
+Claude is Anthropic's primary AI assistant product, available via API and consumer interfaces. The name reflects Anthropic's cultural emphasis on models that are genuinely helpful and intellectually substantive rather than optimized purely for engagement.
+
+Claude 1 (2023): The initial Claude release positioned the model as a safety-focused alternative in the emerging large language model market. It demonstrated strong performance on reasoning, summarization, and instruction-following tasks, with particular attention to reducing harmful outputs and improving honesty.
+
+Claude 2 (2023): Claude 2 extended the context window significantly — up to 100,000 tokens — enabling the model to process entire books, large codebases, or lengthy documents in a single prompt. This made it especially useful for enterprise use cases requiring long-document analysis, legal review, and complex multi-step reasoning across extended inputs.
+
+Claude 3 (2024): The Claude 3 family introduced a three-tier model structure: Haiku (fast and lightweight), Sonnet (balanced capability and efficiency), and Opus (highest capability). Claude 3 Opus outperformed GPT-4 on several benchmarks at release, including graduate-level reasoning tasks and undergraduate knowledge assessments. The family demonstrated strong multilingual performance and improved instruction adherence.
+
+Claude 3.5 and Beyond: Iterative releases continued to improve the Sonnet tier in particular, with Claude 3.5 Sonnet achieving strong performance at competitive inference cost. Subsequent model families continued refining the balance of capability, latency, and safety across the three model tiers.
+
+AI SAFETY PHILOSOPHY
+--------------------
+Anthropic's safety research spans several distinct but related areas. Interpretability research, led by researchers including Chris Olah, aims to understand the internal computations of neural networks — identifying which features neurons respond to, how information flows through transformer layers, and how circuits implement specific behaviors. The goal is to move from treating models as black boxes to having mechanistic understanding of their decision processes.
+
+Alignment research at Anthropic focuses on ensuring models pursue intended goals rather than proxy objectives that diverge under distribution shift or adversarial pressure. Scalable oversight — developing techniques to supervise AI systems on tasks where human evaluation is difficult or unreliable — is a central challenge the organization works to address.
+
+Anthropic has also contributed to broader AI policy discourse, publishing research on model evaluations for dangerous capabilities, participating in government consultations, and advocating for voluntary and regulatory safety commitments across the industry.
+
+ENTERPRISE POSITIONING AND DEPLOYMENT
+--------------------------------------
+Anthropic's commercial strategy has increasingly emphasized enterprise customers. Claude is available through the Anthropic API, through AWS Bedrock, and through Google Cloud's Vertex AI platform, enabling enterprise teams to deploy Claude models within existing cloud infrastructure with established security and compliance frameworks.
+
+The product suite includes Claude.ai (consumer and team interfaces), the Claude API for developers, and specialized configurations for use cases in legal, medical, financial, and software development contexts. Anthropic's emphasis on reduced hallucination rates, strong long-context performance, and documented safety properties has resonated with enterprise buyers in regulated industries where reliability and auditability are paramount.

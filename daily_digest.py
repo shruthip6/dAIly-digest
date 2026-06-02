@@ -6,6 +6,11 @@ from rss_fetcher import fetch_latest_ai_news
 from utils.scraper import extract_article
 from utils.summarizer import summarize_article
 
+try:
+    from rag_assistant.chroma_manager import add_document
+except ImportError:
+    add_document = None
+
 # Configure module logger
 logging.basicConfig(
     level=logging.INFO,
@@ -99,6 +104,23 @@ def generate_daily_digest(max_articles: int = 5) -> List[Dict[str, Any]]:
         article_record["provider"] = summary_result.get("provider")
         article_record["success"] = True
         article_record["error"] = None
+
+        if add_document:
+            try:
+                add_document(
+                    title=article_record.get("title"),
+                    source=article_record.get("source"),
+                    url=article_record.get("url"),
+                    published=article_record.get("published"),
+                    summary=article_record.get("summary"),
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Skipping ChromaDB storage for %s due to insertion failure: %s",
+                    article_record.get("title"),
+                    exc,
+                )
+
         digest.append(article_record)
         logger.info("Processed article: %s", article_record["title"])
 

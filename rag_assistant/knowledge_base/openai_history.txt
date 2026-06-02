@@ -1,0 +1,38 @@
+OPENAI: HISTORY, MODELS, AND ECOSYSTEM INFLUENCE
+=================================================
+
+FOUNDING AND MISSION
+--------------------
+OpenAI was founded in December 2015 as a nonprofit artificial intelligence research laboratory. Its founding members included Sam Altman, Greg Brockman, Ilya Sutskever, Wojciech Zaremba, John Schulman, and Elon Musk, among others. The organization was established with a stated mission to ensure that artificial general intelligence (AGI) benefits all of humanity. Initial funding of approximately $1 billion was pledged by a group of high-profile Silicon Valley investors and technology executives.
+
+In 2019, OpenAI transitioned to a "capped-profit" hybrid structure, creating OpenAI LP alongside the original nonprofit entity. This restructuring enabled the organization to raise substantial venture capital while maintaining a governance framework intended to prevent unconstrained profit-seeking. Microsoft became a key strategic partner, committing multi-billion dollar investments that deepened over subsequent years and led to deep integration of OpenAI models into Microsoft's cloud and productivity infrastructure.
+
+THE GPT SERIES: LANGUAGE MODELS AT SCALE
+-----------------------------------------
+OpenAI's most consequential research line is the Generative Pre-trained Transformer (GPT) series, which demonstrated that scaling transformer-based language models on large text corpora produces increasingly capable general-purpose systems.
+
+GPT-1 (2018): The original GPT model introduced the pre-train-then-fine-tune paradigm for NLP tasks. Trained on the BookCorpus dataset with 117 million parameters, it showed that unsupervised pretraining on diverse text, followed by supervised fine-tuning on specific tasks, consistently outperformed task-specific architectures. This established the foundation for subsequent scaling experiments.
+
+GPT-2 (2019): GPT-2 scaled to 1.5 billion parameters and was trained on WebText, a dataset of outbound links from Reddit. The model demonstrated surprising coherence in open-ended text generation, including plausible news articles, fictional narratives, and code snippets. OpenAI initially staged its release over several months, citing concerns about potential misuse for generating disinformation. This decision sparked significant debate about responsible disclosure norms in AI research and brought public attention to the capabilities of large language models.
+
+GPT-3 (2020): With 175 billion parameters, GPT-3 represented a qualitative leap in few-shot and zero-shot task performance. Published in the paper "Language Models are Few-Shot Learners," GPT-3 showed that sufficiently large models could perform new tasks from only a handful of examples provided in the prompt, without any gradient updates. This in-context learning capability surprised researchers and demonstrated emergent behaviors not present in smaller models. GPT-3 was made available through a commercial API, establishing the model-as-a-service paradigm for large language models.
+
+InstructGPT and RLHF (2022): OpenAI refined GPT-3 using Reinforcement Learning from Human Feedback (RLHF), training models to follow instructions and produce outputs aligned with human preferences. This work produced InstructGPT, which was more helpful, less harmful, and more honest than the base GPT-3 model despite having fewer parameters. RLHF became a foundational alignment technique adopted widely across the industry.
+
+GPT-4 (2023): GPT-4 is a large multimodal model capable of accepting both text and image inputs while producing text outputs. OpenAI did not publicly disclose the model's parameter count or architecture details, citing competitive and safety reasons. GPT-4 substantially outperformed GPT-3.5 on professional and academic benchmarks, including the bar exam, AP examinations, and standardized graduate admission tests. It demonstrated improved instruction-following, reduced hallucination rates, and stronger reasoning across domains including mathematics, law, and medicine.
+
+MULTIMODAL SYSTEMS
+------------------
+OpenAI expanded beyond text-only models with several multimodal systems. DALL-E (2021) and DALL-E 2 (2022) demonstrated high-quality text-to-image generation, enabling users to create photorealistic and stylized images from natural language descriptions. DALL-E 3 (2023) integrated more tightly with ChatGPT, improving prompt adherence and compositional accuracy.
+
+Whisper (2022) is an open-weight automatic speech recognition model trained on 680,000 hours of multilingual audio data, achieving near-human transcription accuracy across numerous languages. The model was released openly and became widely adopted in developer toolchains.
+
+GPT-4V (Vision) extended GPT-4 with image understanding capabilities, enabling applications in document analysis, chart interpretation, and visual question answering. Subsequent releases introduced voice interaction, memory, and real-time multimodal reasoning as part of the GPT-4o ("omni") model family.
+
+CHATGPT AND ECOSYSTEM INFLUENCE
+--------------------------------
+ChatGPT, launched in November 2022, applied instruction tuning and RLHF to GPT-3.5 to produce a conversational assistant accessible via a web interface. It reached one million users within five days and one hundred million users within two months, making it the fastest-growing consumer application in recorded history at that time. ChatGPT fundamentally altered public awareness of large language model capabilities and accelerated competitive investment across the AI industry.
+
+OpenAI's API ecosystem has enabled thousands of applications across customer support, software development, legal research, education, and creative industries. The GPT Store, introduced in 2024, allowed users to publish and discover custom GPT configurations. OpenAI Codex and its successor capabilities drove GitHub Copilot, one of the most widely adopted AI-assisted programming tools.
+
+OpenAI's research outputs, safety frameworks, and deployment decisions have significantly shaped norms, regulatory discussions, and competitive dynamics across the global AI industry. Its iterative deployment philosophy — releasing capable models with usage policies and monitoring for harms — has been both influential and contested within the research and policy communities.

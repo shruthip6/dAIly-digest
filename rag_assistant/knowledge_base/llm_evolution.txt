@@ -1,0 +1,48 @@
+THE EVOLUTION OF LARGE LANGUAGE MODELS
+=======================================
+
+RULE-BASED SYSTEMS: THE SYMBOLIC ERA
+--------------------------------------
+The earliest computational approaches to language understanding were rooted in symbolic AI — systems that operated on explicit, human-authored rules about grammar, syntax, and semantics. Expert systems encoded domain knowledge as logical rules and used inference engines to derive conclusions. Early natural language processing programs such as ELIZA (1966) and SHRDLU (1970) demonstrated that rule-based systems could produce impressively coherent language interactions within narrow, carefully constrained domains.
+
+These systems had fundamental limitations. Rules were brittle, failing to generalize outside their designed domains. Maintaining large rule sets was labor-intensive and required ongoing expert involvement. Handling the ambiguity, context-dependence, and variability of natural language through explicit rules proved intractable at scale. The knowledge acquisition bottleneck — the difficulty of encoding sufficient world knowledge as formal rules — was a persistent obstacle.
+
+STATISTICAL NLP: LEARNING FROM CORPORA
+----------------------------------------
+Beginning in the late 1980s and accelerating through the 1990s and 2000s, statistical approaches replaced symbolic methods as the dominant NLP paradigm. Rather than encoding language rules by hand, statistical models learned patterns from large text corpora.
+
+N-gram language models estimated the probability of a word given the preceding N-1 words, enabling applications in speech recognition, machine translation, and spell correction. Hidden Markov Models (HMMs) were widely applied to part-of-speech tagging and speech recognition. Maximum entropy models and conditional random fields (CRFs) achieved strong performance on sequence labeling tasks.
+
+Statistical machine translation, pioneered at IBM and later improved by phrase-based systems, used large parallel corpora to learn translation mappings without explicit linguistic rules. The IBM models and Moses toolkit became standard tools in the field. These approaches depended heavily on feature engineering — researchers manually designed representations that captured linguistically relevant patterns.
+
+The statistical era demonstrated the power of data-driven learning but remained limited by the features researchers chose to engineer, the difficulty of capturing long-range linguistic dependencies, and the inability to generalize robustly to unseen constructions.
+
+NEURAL NETWORKS: DISTRIBUTED REPRESENTATIONS
+----------------------------------------------
+The application of neural networks to NLP began gaining traction in the early 2000s and accelerated dramatically after 2010. Bengio et al. (2003) introduced neural probabilistic language models, learning distributed word representations (embeddings) alongside the language model itself. These dense vector representations captured semantic similarity — words used in similar contexts received similar vectors — unlike sparse symbolic or count-based representations.
+
+Word2Vec (Mikolov et al., 2013) and GloVe (Pennington et al., 2014) produced high-quality word embeddings efficiently from large corpora, demonstrating striking semantic regularities. The embedding arithmetic "king − man + woman ≈ queen" illustrated that relationships between concepts were encoded geometrically in the vector space. Pre-trained word embeddings became a standard component of NLP pipelines across tasks.
+
+Recurrent neural networks (RNNs) and long short-term memory networks (LSTMs) addressed the challenge of sequential modeling, processing text token by token while maintaining a hidden state that propagated context across the sequence. LSTMs mitigated the vanishing gradient problem that afflicted vanilla RNNs, enabling them to capture longer-range dependencies. Sequence-to-sequence models using encoder-decoder LSTMs with attention mechanisms (Bahdanau et al., 2015) achieved strong results in machine translation and became the foundation for conversational systems.
+
+Despite these advances, RNN-based models were computationally expensive to train due to their sequential nature, struggled with very long sequences, and were outpaced once transformers demonstrated superior scaling properties.
+
+THE TRANSFORMER ERA: PRE-TRAINING AND FINE-TUNING
+--------------------------------------------------
+The introduction of the transformer architecture in 2017 and the subsequent development of large pre-trained models fundamentally restructured the NLP field. The key innovation was the pre-train-then-fine-tune paradigm: train a large model on a broad unsupervised objective using massive text data, then adapt it to specific tasks with comparatively little labeled data.
+
+ELMo (Peters et al., 2018) produced contextualized word representations by training bidirectional LSTMs as language models and extracting intermediate layer activations — a departure from static word embeddings. BERT (Devlin et al., 2018) applied the transformer encoder with masked language modeling pretraining, producing deeply contextualized representations that achieved state-of-the-art results across eleven NLP benchmarks simultaneously.
+
+GPT (Radford et al., 2018) demonstrated that left-to-right language model pretraining with transformer decoders, followed by fine-tuning, was comparably effective for generative tasks. The successive GPT models showed that scaling parameters and data continued to yield dramatic capability improvements, culminating in GPT-3's few-shot learning abilities.
+
+FOUNDATION MODELS AND EMERGENT CAPABILITIES
+---------------------------------------------
+The term "foundation models" (Bommasani et al., Stanford, 2021) was introduced to describe large models trained on broad data at scale that could be adapted to a wide range of downstream tasks. These models — GPT-3, T5, CLIP, DALL-E — shared properties of generality, adaptability, and emergent capabilities: behaviors that appeared at sufficient scale without being explicitly trained.
+
+Emergent capabilities include multi-step arithmetic reasoning, analogical reasoning across domains, translation between low-resource language pairs, and code generation — capabilities that were absent in smaller models and appeared discontinuously as scale increased. This phenomenon challenged assumptions about gradual capability improvement and raised new questions about anticipating and evaluating model behavior.
+
+GENERATIVE AI AND THE CURRENT PARADIGM
+----------------------------------------
+Instruction tuning and reinforcement learning from human feedback (RLHF) transformed large pre-trained models into practical general-purpose assistants. Rather than fine-tuning on specific task datasets, models were trained to follow natural language instructions across diverse tasks, producing the ChatGPT and Claude generation of conversational AI systems.
+
+Generative AI now encompasses text, code, image, audio, and video generation. Multimodal foundation models process and generate across modalities within unified architectures. Retrieval-augmented generation (RAG) combines parametric model knowledge with dynamic retrieval from external document stores, extending effective knowledge without full retraining. Efficient fine-tuning methods including LoRA and QLoRA enable task-specific adaptation of large models with minimal compute. Open-weight model families including LLaMA and Mistral have democratized access, enabling broad research and commercial deployment outside proprietary API ecosystems.

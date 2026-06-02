@@ -1,0 +1,42 @@
+TRANSFORMER ARCHITECTURE: FOUNDATIONS AND IMPACT
+=================================================
+
+ORIGINS: ATTENTION IS ALL YOU NEED
+------------------------------------
+The transformer architecture was introduced in the landmark 2017 paper "Attention Is All You Need" by Vaswani et al. at Google Brain and Google Research. Prior to this work, sequence-to-sequence tasks — machine translation, summarization, question answering — were dominated by recurrent neural networks (RNNs) and long short-term memory networks (LSTMs), which processed input tokens sequentially and struggled to capture long-range dependencies efficiently. Convolutional neural networks had also been explored for sequence modeling but carried similar limitations.
+
+The core insight of the transformer paper was that attention mechanisms alone, without any recurrence or convolution, could achieve superior performance on sequence modeling tasks. By allowing every position in a sequence to attend directly to every other position in a single operation, transformers eliminated the sequential bottleneck of RNNs and enabled far more parallelizable computation during training. The original model achieved state-of-the-art BLEU scores on English-to-German and English-to-French translation benchmarks.
+
+SELF-ATTENTION: THE CORE MECHANISM
+------------------------------------
+Self-attention (also called intra-attention) is the mechanism by which a transformer relates different positions in a single sequence to compute a representation of that sequence. For each token, the model computes three vectors: a Query (Q), a Key (K), and a Value (V), each produced by multiplying the token's embedding by learned weight matrices.
+
+Attention scores are computed by taking the dot product of a token's Query vector with the Key vectors of all other tokens, scaling by the square root of the key dimension to stabilize gradients, and applying a softmax to obtain a probability distribution. The output for each token is then the weighted sum of all Value vectors, where the weights are the attention probabilities. This allows each token to "look at" all other tokens and selectively aggregate their information.
+
+Multi-head attention runs this process in parallel across multiple attention heads, each with independent Q, K, V projections. Different heads learn to attend to different types of relationships — syntactic structure, coreference, semantic similarity — and their outputs are concatenated and projected to produce the final representation. Multi-head attention enables the model to jointly attend to information from different representation subspaces at different positions.
+
+ENCODER-DECODER STRUCTURE
+--------------------------
+The original transformer is organized as an encoder-decoder architecture designed for sequence-to-sequence tasks such as translation.
+
+The encoder processes the input sequence through a stack of identical layers, each containing a multi-head self-attention sublayer and a position-wise feed-forward sublayer. Residual connections and layer normalization are applied around each sublayer. The encoder produces a continuous representation of the entire input sequence, where each token's representation is informed by its context across the full sequence.
+
+The decoder generates the output sequence autoregressively — one token at a time — using two types of attention: masked self-attention (attending only to previously generated tokens to prevent information leakage from future positions) and cross-attention (attending to the encoder's output to condition generation on the input sequence). The decoder stack similarly uses residual connections and layer normalization throughout.
+
+Positional encodings are added to input embeddings to inject information about token order, since the attention mechanism itself is permutation-invariant. The original paper used fixed sinusoidal encodings; subsequent work explored learned positional embeddings and more sophisticated schemes such as rotary position embeddings (RoPE) and ALiBi.
+
+ARCHITECTURAL VARIANTS: ENCODER-ONLY AND DECODER-ONLY
+-------------------------------------------------------
+The full encoder-decoder transformer is suited for tasks requiring both input understanding and output generation. However, many applications benefit from architectures that use only one component.
+
+Encoder-only models, exemplified by BERT (Bidirectional Encoder Representations from Transformers, Google, 2018), use only the transformer encoder with bidirectional self-attention. Pre-trained with masked language modeling — predicting randomly masked tokens — and next sentence prediction, BERT and its descendants (RoBERTa, ALBERT, DeBERTa) became the dominant approach for natural language understanding tasks: classification, named entity recognition, question answering, and semantic similarity.
+
+Decoder-only models, exemplified by the GPT series, use only the transformer decoder with causal (left-to-right) self-attention. Pre-trained with next-token prediction on large text corpora, decoder-only models excel at text generation and have proven most effective at scaling to very large parameter counts. The majority of modern large language models — including GPT-4, Claude, Gemini, and LLaMA — use decoder-only architectures.
+
+TRANSFORMER SCALING AND THE NLP REVOLUTION
+-------------------------------------------
+A central empirical finding of the transformer era is that model performance scales predictably with increases in model parameters, training data volume, and compute budget. Kaplan et al. (OpenAI, 2020) formalized this in neural scaling laws, showing that loss decreases as a power law with each of these variables. Subsequent work by Hoffmann et al. (DeepMind, 2022) — the Chinchilla paper — refined optimal compute allocation, showing that prior large models had been undertrained relative to their parameter counts and that training tokens should scale proportionally with parameters.
+
+These scaling laws gave the field a principled framework for investment decisions and established the expectation that larger models trained on more data would continue to yield capability improvements across diverse tasks.
+
+The transformer architecture catalyzed a revolution in NLP. Pre-transformer state of the art on most benchmarks was produced by task-specific architectures with extensive feature engineering. Within a few years of BERT and GPT-2, transformer-based models achieved human-level or superhuman performance on reading comprehension, natural language inference, commonsense reasoning, and code generation. Transfer learning via pre-training became the universal paradigm, replacing the prior practice of training models from scratch on individual task datasets. The transformer's influence subsequently extended to computer vision (Vision Transformers, ViT), protein structure prediction (AlphaFold 2), audio processing, and multimodal systems combining vision and language.
