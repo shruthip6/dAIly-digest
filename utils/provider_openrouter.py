@@ -32,12 +32,12 @@ def generate_with_openrouter(prompt: str) -> str:
         
     return completion.choices[0].message.content
 
-if __name__ == "__main__":
-    try:
-        print("Testing OpenRouter Provider...")
-        test_prompt = "Summarize today's AI industry trends in 3 bullet points."
-        result = generate_with_openrouter(test_prompt)
-        print("\nOPENROUTER RESPONSE:\n")
-        print(result)
-    except Exception as e:
-        print(f"Error occurred: {e}")
+# if __name__ == "__main__":
+#     try:
+#         print("Testing OpenRouter Provider...")
+#         test_prompt = "Summarize today's AI industry trends in 3 bullet points."
+#         result = generate_with_openrouter(test_prompt)
+#         print("\nOPENROUTER RESPONSE:\n")
+#         print(result)
+#     except Exception as e:
+#         print(f"Error occurred: {e}")

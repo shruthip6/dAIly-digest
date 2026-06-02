@@ -84,9 +84,9 @@ def route_prompt(prompt: str) -> Dict[str, Any]:
         "error": combined_errors
     }
 
-if __name__ == "__main__":
-    print("Testing routing orchestrator...")
-    test_prompt = "Say hello in 3 words."
-    res = route_prompt(test_prompt)
-    print("\nOrchestrated Result:")
-    print(res)
+# if __name__ == "__main__":
+#     print("Testing routing orchestrator...")
+#     test_prompt = "Say hello in 3 words."
+#     res = route_prompt(test_prompt)
+#     print("\nOrchestrated Result:")
+#     print(res)

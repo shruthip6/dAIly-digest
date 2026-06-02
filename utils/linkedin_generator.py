@@ -198,32 +198,32 @@ def generate_universal_linkedin_post(summary_text: str) -> Dict[str, Any]:
             "error": error_msg
         }
 
-if __name__ == "__main__":
-    print("Testing LinkedIn Generator Module...")
+# if __name__ == "__main__":
+#     print("Testing LinkedIn Generator Module...")
     
-    # Sample input summary (matching the structure from summarizer.py)
-    sample_summary = (
-        "### 1. Concise Summary\n"
-        "OpenAI has released GPT-4o mini, a smaller and highly cost-efficient AI model. "
-        "It is priced significantly lower than previous models like GPT-3.5 Turbo while achieving an "
-        "impressive score of 82% on the MMLU benchmark, beating other small models in the market.\n\n"
-        "### 2. Key Insights\n"
-        "- Input tokens are priced at $0.15 per million, and output tokens at $0.60 per million (60%+ cheaper than GPT-3.5 Turbo).\n"
-        "- Retains high benchmark capability (82% MMLU) despite the reduced model size and costs.\n"
-        "- Supports text and vision modalities with low-latency responsiveness.\n\n"
-        "### 3. Industry Impact\n"
-        "This release lowers the financial barrier for AI application development, enabling startups and "
-        "enterprises to run high-volume workflows, complex agent chains, and real-time assistants at a fraction of the cost.\n\n"
-        "### 4. Future Implications\n"
-        "As frontier intelligence becomes commoditized and cheap, the focus will rapidly pivot from model building "
-        "to building reliable, complex agent architectures and customer-facing integration layers."
-    )
+#     # Sample input summary (matching the structure from summarizer.py)
+#     sample_summary = (
+#         "### 1. Concise Summary\n"
+#         "OpenAI has released GPT-4o mini, a smaller and highly cost-efficient AI model. "
+#         "It is priced significantly lower than previous models like GPT-3.5 Turbo while achieving an "
+#         "impressive score of 82% on the MMLU benchmark, beating other small models in the market.\n\n"
+#         "### 2. Key Insights\n"
+#         "- Input tokens are priced at $0.15 per million, and output tokens at $0.60 per million (60%+ cheaper than GPT-3.5 Turbo).\n"
+#         "- Retains high benchmark capability (82% MMLU) despite the reduced model size and costs.\n"
+#         "- Supports text and vision modalities with low-latency responsiveness.\n\n"
+#         "### 3. Industry Impact\n"
+#         "This release lowers the financial barrier for AI application development, enabling startups and "
+#         "enterprises to run high-volume workflows, complex agent chains, and real-time assistants at a fraction of the cost.\n\n"
+#         "### 4. Future Implications\n"
+#         "As frontier intelligence becomes commoditized and cheap, the focus will rapidly pivot from model building "
+#         "to building reliable, complex agent architectures and customer-facing integration layers."
+#     )
     
-    print("\nRunning post generation on sample summary:")
-    res = generate_linkedin_post(sample_summary)
-    if res["success"]:
-        print(f"\nProvider Used: {res['provider']}")
-        print("\nGenerated LinkedIn Post:\n")
-        print(res["linkedin_post"])
-    else:
-        print(f"\nFailed to generate post. Error: {res['error']}")
+#     print("\nRunning post generation on sample summary:")
+#     res = generate_linkedin_post(sample_summary)
+#     if res["success"]:
+#         print(f"\nProvider Used: {res['provider']}")
+#         print("\nGenerated LinkedIn Post:\n")
+#         print(res["linkedin_post"])
+#     else:
+#         print(f"\nFailed to generate post. Error: {res['error']}")

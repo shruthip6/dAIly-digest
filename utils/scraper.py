@@ -128,19 +128,19 @@ def extract_article(url: str) -> Dict[str, Any]:
             "error": error_msg
         }
 
-if __name__ == "__main__":
-    import json
+# if __name__ == "__main__":
+#     import json
     
-    print("Testing Web Scraper Module...")
+#     print("Testing Web Scraper Module...")
     
-    # List of test URLs including an OpenAI blog post, invalid, and empty URLs
-    test_urls = [
-        "https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence/",  # OpenAI blog post
-        "invalid-url-test",                             # Invalid URL format
-        ""                                              # Empty URL string
-    ]
+#     # List of test URLs including an OpenAI blog post, invalid, and empty URLs
+#     test_urls = [
+#         "https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence/",  # OpenAI blog post
+#         "invalid-url-test",                             # Invalid URL format
+#         ""                                              # Empty URL string
+#     ]
     
-    for test_url in test_urls:
-        print(f"\nScraping URL: {test_url}")
-        result = extract_article(test_url)
-        print(json.dumps(result, indent=2, default=str))
+#     for test_url in test_urls:
+#         print(f"\nScraping URL: {test_url}")
+#         result = extract_article(test_url)
+#         print(json.dumps(result, indent=2, default=str))

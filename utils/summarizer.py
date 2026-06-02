@@ -231,28 +231,28 @@ def universal_summarizer(article_text: str) -> Dict[str, Any]:
             "error": error_msg
         }
 
-if __name__ == "__main__":
-    import json
+# if __name__ == "__main__":
+#     import json
     
-    print("Testing Summarizer Module...")
+#     print("Testing Summarizer Module...")
     
-    # Sample article text for local validation (GPT-4o mini announcement summary)
-    sample_text = (
-        "OpenAI has officially released GPT-4o mini, a smaller, highly cost-efficient version of its flagship "
-        "GPT-4o model. This new model is priced at 15 cents per million input tokens and 60 cents per million "
-        "output tokens, which is over 60% cheaper than the previous GPT-3.5 Turbo model. Despite its small size, "
-        "GPT-4o mini scores 82% on the MMLU benchmark, surpassing many other small models in the industry. "
-        "It supports both text and vision inputs, with support for video and audio inputs planned for the near future. "
-        "Developers are expected to use GPT-4o mini for high-volume tasks, multi-step agent chains, and real-time "
-        "applications that require low latency and high affordability. Industry experts suggest this release will "
-        "accelerate the development of agentic workflows and make AI accessibility much more practical for startups."
-    )
+#     # Sample article text for local validation (GPT-4o mini announcement summary)
+#     sample_text = (
+#         "OpenAI has officially released GPT-4o mini, a smaller, highly cost-efficient version of its flagship "
+#         "GPT-4o model. This new model is priced at 15 cents per million input tokens and 60 cents per million "
+#         "output tokens, which is over 60% cheaper than the previous GPT-3.5 Turbo model. Despite its small size, "
+#         "GPT-4o mini scores 82% on the MMLU benchmark, surpassing many other small models in the industry. "
+#         "It supports both text and vision inputs, with support for video and audio inputs planned for the near future. "
+#         "Developers are expected to use GPT-4o mini for high-volume tasks, multi-step agent chains, and real-time "
+#         "applications that require low latency and high affordability. Industry experts suggest this release will "
+#         "accelerate the development of agentic workflows and make AI accessibility much more practical for startups."
+#     )
     
-    print("\nRunning summary on sample text:")
-    res = summarize_article(sample_text)
-    if res["success"]:
-        print(f"\nProvider Used: {res['provider']}")
-        print("\nGenerated Summary:\n")
-        print(res["summary"])
-    else:
-        print(f"\nFailed to generate summary. Error: {res['error']}")
+#     print("\nRunning summary on sample text:")
+#     res = summarize_article(sample_text)
+#     if res["success"]:
+#         print(f"\nProvider Used: {res['provider']}")
+#         print("\nGenerated Summary:\n")
+#         print(res["summary"])
+#     else:
+#         print(f"\nFailed to generate summary. Error: {res['error']}")
