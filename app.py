@@ -17,6 +17,7 @@ transformers_logging.set_verbosity_error()
 from utils.scraper import extract_article
 from utils.summarizer import universal_summarizer
 from utils.linkedin_generator import generate_universal_linkedin_post
+from utils.linkedin_generator import generate_linkedin_post
 from daily_digest import generate_daily_digest
 
 # Reconfigure stdout to use UTF-8 to prevent encoding warnings on Windows
@@ -553,6 +554,30 @@ def render_daily_digest():
 
                     st.markdown("<div class='digest-section-label'>Future Implications</div>", unsafe_allow_html=True)
                     st.write(future_implications)
+
+                    # --- LinkedIn Post Generation (per article) ---
+                    st.markdown("---")
+                    linkedin_key = f"linkedin_digest_{idx}"
+                    state_key = f"linkedin_digest_post_{idx}"
+
+                    if st.button("Generate LinkedIn Post", key=linkedin_key):
+                        with st.spinner("Generating LinkedIn post..."):
+                            post_result = generate_linkedin_post(article.get("summary", ""))
+                        if post_result["success"]:
+                            st.session_state[state_key] = post_result["linkedin_post"]
+                        else:
+                            st.session_state[state_key] = None
+                            st.error(f"LinkedIn generation failed: {post_result['error']}")
+
+                    if st.session_state.get(state_key):
+                        st.markdown("**LinkedIn Post**")
+                        st.text_area(
+                            "Copy your LinkedIn post below",
+                            value=st.session_state[state_key],
+                            height=250,
+                            disabled=True,
+                            key=f"linkedin_digest_textarea_{idx}"
+                        )
                 else:
                     st.warning(f"Failed to process article: {article.get('error') or 'Unknown error'}")
     elif st.session_state.digest_generated:
