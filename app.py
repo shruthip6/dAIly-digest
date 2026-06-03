@@ -112,6 +112,16 @@ MINIMAL_CSS = """
 st.markdown(MINIMAL_CSS, unsafe_allow_html=True)
 
 
+def normalize_sentiment(sentiment_text: str) -> str:
+    """Normalize raw sentiment text into a single canonical value."""
+    text = (sentiment_text or "").lower().strip()
+    if text.startswith("positive") or "positive" in text:
+        return "Positive"
+    elif text.startswith("negative") or "negative" in text:
+        return "Negative"
+    return "Neutral"
+
+
 # Helper function to parse universal news summaries into UI cards
 def parse_universal_summary(summary_text: str):
     """
@@ -140,8 +150,9 @@ def parse_universal_summary(summary_text: str):
         summary = summary_text or "No summary was returned."
     if not insights:
         insights = "Key insights were not available. Please review the summary for details."
-    if not sentiment:
-        sentiment = "Neutral - Sentiment could not be confidently extracted."
+    
+    # Use canonical sentiment exclusively
+    sentiment = normalize_sentiment(sentiment)
 
     return summary, insights, sentiment
 
@@ -332,23 +343,16 @@ def render_summarizer_page():
 
         with col_right:
             with st.container(border=True):
-                sentiment_text = data.get("sentiment", "")
-                sentiment_label = "Neutral"
-                sentiment_class = "sentiment-neutral"
-
-                if sentiment_text.lower().startswith("positive"):
-                    sentiment_label = "Positive"
-                    sentiment_class = "sentiment-positive"
-                elif sentiment_text.lower().startswith("negative"):
-                    sentiment_label = "Negative"
-                    sentiment_class = "sentiment-negative"
+                # Use the single canonical sentiment value for all UI layers
+                sentiment_label = data.get("sentiment", "Neutral")
+                sentiment_class = f"sentiment-{sentiment_label.lower()}"
 
                 st.markdown("**Sentiment**")
                 st.markdown(
                     f"<span class='sentiment-badge {sentiment_class}'>{sentiment_label}</span>",
                     unsafe_allow_html=True
                 )
-                st.write(sentiment_text)
+                st.write(sentiment_label)
                 
         # Subtle provider and metadata lines
         st.caption(f"Routed LLM: {data['provider']} | Status: Successfully Routed")
@@ -387,83 +391,146 @@ def render_summarizer_page():
 
 # ----------------- PAGE 4: DIGEST ASSISTANT (RAG) -----------------
 def render_rag_assistant():
-    """Render the lightweight retrieval-grounded assistant UI."""
+    """Render the conversational RAG assistant UI with chat-style interaction."""
     st.subheader("Digest Assistant (RAG)")
     st.write(
         "Ask questions about AI developments, companies, trends, and previously ingested AI intelligence."
     )
 
+    # --- Session state initialisation ---
+    if "rag_chat_history" not in st.session_state:
+        st.session_state.rag_chat_history = []  # List[{"role": str, "content": str, "sources": list|None, "provider": str|None}]
     if "rag_previous_query" not in st.session_state:
         st.session_state.rag_previous_query = ""
     if "rag_previous_topic" not in st.session_state:
         st.session_state.rag_previous_topic = ""
-    if "rag_answer" not in st.session_state:
-        st.session_state.rag_answer = None
-    if "rag_sources" not in st.session_state:
-        st.session_state.rag_sources = []
-    if "rag_provider" not in st.session_state:
-        st.session_state.rag_provider = None
 
-    user_query = st.text_input(
-        "Ask the Digest Assistant",
-        placeholder="Example: How did OpenAI influence the LLM ecosystem?"
-    )
+    # --- Render existing chat history ---
+    for msg in st.session_state.rag_chat_history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-    ask_clicked = st.button("Ask Assistant")
-    if ask_clicked:
-        if not user_query.strip():
-            st.warning("Please enter a question for the assistant.")
-        else:
-            try:
-                from rag_assistant.rag_pipeline import answer_ai_query, detect_topic
-            except Exception as exc:
-                st.error(
-                    "RAG dependencies are not available yet. Install chromadb, "
-                    f"sentence-transformers, and langchain, then retry. Details: {exc}"
-                )
-                return
+            # Show retrieved sources beneath assistant messages.
+            if msg["role"] == "assistant" and msg.get("sources"):
+                st.write("**Retrieved Sources**")
+                for source in msg["sources"]:
+                    with st.container(border=True):
+                        st.markdown(f"**{source.get('title') or 'Untitled'}**")
+                        meta = []
+                        if source.get("source"):
+                            meta.append(f"Source: {source['source']}")
+                        if source.get("published"):
+                            meta.append(f"Published: {source['published']}")
+                        if source.get("similarity") is not None:
+                            meta.append(f"Similarity: {source['similarity']:.2f}")
+                        if meta:
+                            st.caption(" | ".join(meta))
+                        if source.get("url"):
+                            st.markdown(f"[Open source]({source['url']})")
 
-            session_context = {
-                "previous_query": st.session_state.rag_previous_query,
-                "previous_topic": st.session_state.rag_previous_topic
-            }
+            # Show provider badge beneath assistant messages.
+            if msg["role"] == "assistant" and msg.get("provider"):
+                st.caption(f"Routed LLM: {msg['provider']}")
 
+    # --- Chat input ---
+    user_query = st.chat_input("Ask the Digest Assistant...")
+
+    if user_query:
+        # Immediately render the user message.
+        with st.chat_message("user"):
+            st.markdown(user_query)
+
+        # Persist user message.
+        st.session_state.rag_chat_history.append({
+            "role": "user",
+            "content": user_query,
+            "sources": None,
+            "provider": None,
+        })
+
+        # --- Import RAG pipeline (deferred to keep other pages fast) ---
+        try:
+            from rag_assistant.rag_pipeline import answer_ai_query, detect_topic
+        except Exception as exc:
+            error_msg = (
+                "RAG dependencies are not available yet. Install chromadb, "
+                f"sentence-transformers, and langchain, then retry. Details: {exc}"
+            )
+            with st.chat_message("assistant"):
+                st.error(error_msg)
+            st.session_state.rag_chat_history.append({
+                "role": "assistant",
+                "content": error_msg,
+                "sources": None,
+                "provider": None,
+            })
+            return
+
+        # Build session context for the pipeline.
+        session_context = {
+            "previous_query": st.session_state.rag_previous_query,
+            "previous_topic": st.session_state.rag_previous_topic,
+            "chat_history": [
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.rag_chat_history
+            ],
+        }
+
+        with st.chat_message("assistant"):
             with st.spinner("Retrieving relevant AI intelligence and drafting an answer..."):
                 result = answer_ai_query(user_query, session_context=session_context)
 
             if not result.get("success"):
-                st.error(f"Assistant failed: {result.get('error') or 'Unknown error'}")
+                error_text = f"Assistant failed: {result.get('error') or 'Unknown error'}"
+                st.error(error_text)
+                st.session_state.rag_chat_history.append({
+                    "role": "assistant",
+                    "content": error_text,
+                    "sources": None,
+                    "provider": None,
+                })
             else:
-                st.session_state.rag_answer = result.get("answer")
-                st.session_state.rag_sources = result.get("sources", [])
-                st.session_state.rag_provider = result.get("provider")
+                answer = result.get("answer", "")
+                sources = result.get("sources", [])
+                provider = result.get("provider")
+
+                st.markdown(answer)
+
+                # Display retrieved sources.
+                if sources:
+                    st.write("**Retrieved Sources**")
+                    for source in sources:
+                        with st.container(border=True):
+                            st.markdown(f"**{source.get('title') or 'Untitled'}**")
+                            meta = []
+                            if source.get("source"):
+                                meta.append(f"Source: {source['source']}")
+                            if source.get("published"):
+                                meta.append(f"Published: {source['published']}")
+                            if source.get("similarity") is not None:
+                                meta.append(f"Similarity: {source['similarity']:.2f}")
+                            if meta:
+                                st.caption(" | ".join(meta))
+                            if source.get("url"):
+                                st.markdown(f"[Open source]({source['url']})")
+
+                if provider:
+                    st.caption(f"Routed LLM: {provider}")
+
+                # Persist assistant message with sources.
+                st.session_state.rag_chat_history.append({
+                    "role": "assistant",
+                    "content": answer,
+                    "sources": sources,
+                    "provider": provider,
+                })
+
+                # Update topic continuity state.
                 st.session_state.rag_previous_query = user_query
-                st.session_state.rag_previous_topic = detect_topic(user_query) or st.session_state.rag_previous_topic
+                st.session_state.rag_previous_topic = (
+                    detect_topic(user_query) or st.session_state.rag_previous_topic
+                )
 
-    if st.session_state.rag_answer:
-        st.write("")
-        with st.container(border=True):
-            st.markdown("**Assistant Response**")
-            st.write(st.session_state.rag_answer)
-            if st.session_state.rag_provider:
-                st.caption(f"Routed LLM: {st.session_state.rag_provider}")
-
-        if st.session_state.rag_sources:
-            st.write("### Retrieved Sources")
-            for source in st.session_state.rag_sources:
-                with st.container(border=True):
-                    st.markdown(f"**{source.get('title') or 'Untitled'}**")
-                    meta = []
-                    if source.get("source"):
-                        meta.append(f"Source: {source.get('source')}")
-                    if source.get("published"):
-                        meta.append(f"Published: {source.get('published')}")
-                    if source.get("similarity") is not None:
-                        meta.append(f"Similarity: {source.get('similarity'):.2f}")
-                    if meta:
-                        st.caption(" | ".join(meta))
-                    if source.get("url"):
-                        st.markdown(f"[Open source]({source.get('url')})")
 
 
 # ----------------- PAGE 4: DAILY DIGEST -----------------

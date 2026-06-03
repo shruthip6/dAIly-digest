@@ -2,15 +2,17 @@
 """Utility module to fetch the latest AI news articles from curated RSS feeds.
 
 The module provides a single public function `fetch_latest_ai_news` which returns a list of
-article metadata dictionaries sorted by publication date (most recent first).
+article metadata dictionaries selected via balanced round-robin source traversal.
 
 Features
 --------
 - Uses the `feedparser` library for RSS parsing.
-- Curated list of AI‑focused RSS sources (OpenAI, Anthropic, DeepMind, Hugging Face, NVIDIA).
+- Curated list of AI-focused RSS sources with strict ordering for round-robin selection.
+- AI relevance filtering: only articles scoring >= 2 keyword matches are retained.
+- Round-robin source balancing: articles are drawn one-per-feed per pass to maximise diversity.
 - Graceful handling of unavailable or malformed feeds – a broken feed is logged and skipped.
 - Configurable maximum number of articles to return.
-- Production‑ready structure: type hints, detailed docstrings, configurable logger.
+- Production-ready structure: type hints, detailed docstrings, configurable logger.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ import logging
 import sys
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Mapping, Optional
+from typing import Dict, List, Mapping, Optional
 
 import feedparser
 
@@ -47,7 +49,7 @@ class Article:
     Attributes
     ----------
     title: str
-        Human‑readable title of the article.
+        Human-readable title of the article.
     source: str
         Human readable name of the RSS feed/source.
     url: str
@@ -63,9 +65,9 @@ class Article:
     published: datetime
 
     def to_dict(self) -> Mapping[str, str]:
-        """Return a JSON‑serialisable dictionary.
+        """Return a JSON-serialisable dictionary.
 
-        The ``published`` datetime is ISO‑8601 formatted (UTC).
+        The ``published`` datetime is ISO-8601 formatted (UTC).
         """
         return {
             "title": self.title,
@@ -76,17 +78,76 @@ class Article:
 
 # ---------------------------------------------------------------------------
 # Curated RSS feed catalogue
+# Order is preserved and drives round-robin article selection.
 # ---------------------------------------------------------------------------
 _FEED_CATALOGUE: Mapping[str, str] = {
+    "TLDR AI": "https://tldr.tech/api/r ss/ai",
+    "AI Feed": "https://aifeed.dev/feed.xml",
+    "Wired AI:": "https://www.wired.com/feed/tag/ai/latest/rss",
+    # "VentureBeat AI": "https://venturebeat.com/category/ai/feed",
     "OpenAI": "https://openai.com/news/rss.xml",
-    # Anthropic does not expose an official RSS – use RSSHub as a reliable proxy.
-    "Anthropic": "https://rsshub.app/anthropic/blog",
-    # DeepMind (Google) – no official feed; RSSHub provides a scraped version.
-    "DeepMind": "https://rsshub.app/deepmind/blog",
-    "Hugging Face": "https://huggingface.co/blog/rss",
-    # NVIDIA – primary newsroom feed.
     "NVIDIA": "https://nvidianews.nvidia.com/rss.xml",
 }
+
+# ---------------------------------------------------------------------------
+# AI relevance filtering
+# ---------------------------------------------------------------------------
+AI_RELEVANCE_KEYWORDS: List[str] = [
+    "ai",
+    "artificial intelligence",
+    "machine learning",
+    "llm",
+    "gpt",
+    "chatgpt",
+    "openai",
+    "anthropic",
+    "claude",
+    "transformer",
+    "foundation model",
+    "generative ai",
+    "multimodal",
+    "rag",
+    "vector database",
+    "neural network",
+    "gpu",
+    "nvidia",
+    "diffusion",
+    "deep learning",
+    "ai infrastructure",
+    "agentic ai",
+]
+
+
+def is_ai_relevant(title: str, summary: str) -> bool:
+    """Determine whether an article is relevant to the AI ecosystem.
+
+    Combines the article title and summary into a single lowercase text blob,
+    then counts how many of the curated ``AI_RELEVANCE_KEYWORDS`` appear in it.
+    An article is considered relevant only when the cumulative keyword score
+    reaches 2 or more, preventing weak single-keyword coincidences from
+    slipping through (e.g. a gadget article that mentions "GPU" once).
+
+    The check is:
+    - Lightweight   – pure string operations, no external calls.
+    - Deterministic – identical inputs always produce identical outputs.
+    - Fast           – O(N·K) where N = text length and K = keyword count.
+    - Explainable   – each keyword hit contributes exactly +1 to the score.
+
+    Parameters
+    ----------
+    title: str
+        Article headline.
+    summary: str
+        Short description or excerpt from the RSS entry (may be empty).
+
+    Returns
+    -------
+    bool
+        ``True`` if the combined score is >= 2; ``False`` otherwise.
+    """
+    combined = (title + " " + summary).lower()
+    score = sum(1 for keyword in AI_RELEVANCE_KEYWORDS if keyword in combined)
+    return score >= 2
 
 
 # ---------------------------------------------------------------------------
@@ -100,7 +161,7 @@ def _parse_entry(entry: dict, source_name: str) -> Optional[Article]:
     entry: dict
         Single entry object returned by ``feedparser``.
     source_name: str
-        Human‑readable name of the originating feed.
+        Human-readable name of the originating feed.
 
     Returns
     -------
@@ -139,29 +200,35 @@ def _parse_entry(entry: dict, source_name: str) -> Optional[Article]:
         )
         return None
 
+
 def _fetch_feed(url: str, source_name: str) -> List[Article]:
-    """Retrieve and parse a single RSS feed.
+    """Retrieve, parse, and AI-filter a single RSS feed.
+
+    Articles that do not pass :func:`is_ai_relevant` are discarded before being
+    returned, so that only genuinely AI-ecosystem content flows into the
+    selection and scraping pipeline.
 
     Parameters
     ----------
     url: str
         Feed URL.
     source_name: str
-        Human‑readable identifier for logging.
+        Human-readable identifier for logging.
 
     Returns
     -------
     List[Article]
-        Articles extracted from the feed; an empty list if the feed cannot be processed.
+        AI-relevant articles extracted from the feed; an empty list if the
+        feed cannot be processed or yields no relevant content.
     """
     logger.info("Fetching feed for %s from %s", source_name, url)
     try:
-        # First attempt using feedparser's built‑in fetch (may fail on SSL issues)
+        # First attempt using feedparser's built-in fetch (may fail on SSL issues).
         parsed = feedparser.parse(url)
         if parsed.bozo and isinstance(parsed.bozo_exception, Exception):
-            # If bozo indicates a parsing error (often SSL), fall back to requests with verification disabled.
+            # If bozo indicates a parsing error (often SSL), fall back to requests.
             raise parsed.bozo_exception
-        # Successful parse, return articles below.
+        # Successful parse – fall through to article extraction below.
     except Exception as primary_exc:
         logger.warning(
             "Primary fetch/parsing failed for %s (%s): %s – attempting fallback with insecure request",
@@ -172,8 +239,14 @@ def _fetch_feed(url: str, source_name: str) -> List[Article]:
         try:
             import requests
             import urllib3
+
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"}, verify=False)
+            resp = requests.get(
+                url,
+                timeout=15,
+                headers={"User-Agent": "Mozilla/5.0"},
+                verify=False,
+            )
             resp.raise_for_status()
             parsed = feedparser.parse(resp.content)
         except Exception as fallback_exc:
@@ -184,16 +257,47 @@ def _fetch_feed(url: str, source_name: str) -> List[Article]:
                 fallback_exc,
             )
             return []
-        articles: List[Article] = []
-        for entry in parsed.entries:
-            article = _parse_entry(entry, source_name)
-            if article:
-                articles.append(article)
-        logger.info("Fetched %d articles from %s", len(articles), source_name)
-        return articles
-    except Exception as exc:
-        logger.exception("Error fetching feed %s (%s): %s", source_name, url, exc)
-        return []
+
+    raw_count = len(parsed.entries)
+    logger.info("Parsed %d entries from %s", raw_count, source_name)
+
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    articles: List[Article] = []
+    for entry in parsed.entries:
+        article = _parse_entry(entry, source_name)
+        if article is None:
+            continue
+
+        # Current Date check: Skip articles not published today
+        if article.published.strftime("%Y-%m-%d") != today_str:
+            logger.debug(
+                "Filtered out (older date): '%s' from %s", article.title, source_name
+            )
+            continue
+
+        # AI relevance gate – use the RSS summary/description if available.
+        entry_summary = (
+            entry.get("summary", "")
+            or entry.get("description", "")
+            or ""
+        )
+        if not is_ai_relevant(article.title, entry_summary):
+            logger.debug(
+                "Filtered out (low AI relevance): '%s' from %s", article.title, source_name
+            )
+            continue
+
+        articles.append(article)
+
+    logger.info(
+        "%d / %d articles passed AI relevance filtering for %s",
+        len(articles),
+        raw_count,
+        source_name,
+    )
+    return articles
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -201,8 +305,17 @@ def _fetch_feed(url: str, source_name: str) -> List[Article]:
 def fetch_latest_ai_news(max_articles: int = 3) -> List[Mapping[str, str]]:
     """Fetch the most recent AI news items from curated RSS feeds.
 
-    The function aggregates articles from a predefined set of sources, sorts them by
-    publication date (newest first) and returns up to ``max_articles`` entries.
+    Articles are selected using a **round-robin** strategy that iterates over
+    the ordered ``_FEED_CATALOGUE`` feeds in sequence, picking one article per
+    feed per pass until ``max_articles`` is reached or all feeds are exhausted.
+
+    This guarantees balanced source diversity regardless of publication volume:
+    a high-volume feed like VentureBeat cannot crowd out a lower-volume source
+    like OpenAI.
+
+    Selection example for max_articles=8 (6 feeds):
+        Pass 1: TLDR AI → AI Feed → Wired AI → VentureBeat AI → OpenAI → NVIDIA
+        Pass 2: TLDR AI (2nd article) → AI Feed (2nd article)
 
     Parameters
     ----------
@@ -213,27 +326,80 @@ def fetch_latest_ai_news(max_articles: int = 3) -> List[Mapping[str, str]]:
     -------
     List[Mapping[str, str]]
         A list of dictionaries with the keys ``title``, ``source``, ``url`` and
-        ``published`` (ISO‑8601 UTC string).
+        ``published`` (ISO-8601 UTC string).
     """
     if max_articles <= 0:
         logger.warning("max_articles must be a positive integer; received %s", max_articles)
         return []
 
-    all_articles: List[Article] = []
+    # Step 1 – fetch and AI-filter each feed individually, preserving catalogue order.
+    feed_buckets: Dict[str, List[Article]] = {}
     for source, feed_url in _FEED_CATALOGUE.items():
-        articles = _fetch_feed(feed_url, source)
-        all_articles.extend(articles)
+        feed_buckets[source] = _fetch_feed(feed_url, source)
 
-    # Sort globally by publication timestamp descending.
-    all_articles.sort(key=lambda a: a.published, reverse=True)
+    # Step 2 – round-robin selection across feeds.
+    selected: List[Article] = []
+    seen_urls: set = set()
+    seen_titles: set = set()
 
-    # Slice to the requested limit.
-    selected = all_articles[:max_articles]
-    logger.info("Returning %d aggregated articles (requested %d)", len(selected), max_articles)
+    feed_names = list(_FEED_CATALOGUE.keys())       # preserves insertion order
+    cursors: Dict[str, int] = {name: 0 for name in feed_names}
+
+    while len(selected) < max_articles:
+        made_progress = False
+
+        for source in feed_names:
+            if len(selected) >= max_articles:
+                break
+
+            bucket = feed_buckets[source]
+            cursor = cursors[source]
+
+            # Advance cursor past duplicates within this feed.
+            while cursor < len(bucket):
+                candidate = bucket[cursor]
+                cursor += 1
+
+                if candidate.url in seen_urls:
+                    logger.debug("Skipped duplicate URL: %s", candidate.url)
+                    continue
+                if candidate.title in seen_titles:
+                    logger.debug("Skipped duplicate title: %s", candidate.title)
+                    continue
+
+                # Valid candidate – select it.
+                selected.append(candidate)
+                seen_urls.add(candidate.url)
+                seen_titles.add(candidate.title)
+                cursors[source] = cursor
+                made_progress = True
+                logger.info(
+                    "Selected article from %s: '%s'", source, candidate.title
+                )
+                break
+            else:
+                # Feed exhausted – update cursor so we don't recheck.
+                cursors[source] = cursor
+
+        if not made_progress:
+            # All feeds exhausted before reaching max_articles.
+            logger.info(
+                "All feeds exhausted after selecting %d articles (requested %d)",
+                len(selected),
+                max_articles,
+            )
+            break
+
+    logger.info(
+        "Returning %d round-robin selected articles (requested %d)",
+        len(selected),
+        max_articles,
+    )
     return [article.to_dict() for article in selected]
 
+
 # ---------------------------------------------------------------------------
-# Module self‑test (run with ``python -m rss_fetcher``)
+# Module self-test (run with ``python rss_fetcher.py``)
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     import json
