@@ -47,14 +47,7 @@ MINIMAL_CSS = """
 
 /* Brand header without emojis */
 .brand-title {
-    font-size: 2.8rem;
-    font-weight: 800;
-    color: #0F172A;
-    margin-bottom: 8px;
-    margin-top: -15px;
-}
-.brand-title span {
-    color: #FF4B91;
+    /* Styles are now applied inline to guarantee color rendering */
 }
 
 /* Sentiment badge formatting */
@@ -106,6 +99,16 @@ MINIMAL_CSS = """
     color: #FF4B91;
     font-weight: 700;
     margin-top: 0;
+}
+/* Vision Section */
+.vision-section {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+    color: #94A3B8;
+    font-size: 1rem;
+    font-weight: 400;
 }
 </style>
 """
@@ -203,64 +206,51 @@ def parse_ai_digest_summary(summary_text: str):
 
 # ----------------- PAGE 1: HOME PAGE -----------------
 def render_home_page():
-    st.markdown("<h1 class='brand-title'>d<span>AI</span>ly digest</h1>", unsafe_allow_html=True)
-    st.write("### An AI-powered news intelligence platform")
-    
-    st.write("---")
+    st.markdown("<h1 style='text-align: center; font-size: 2.8rem; font-weight: 800; color: #FF4B91; margin-bottom: 8px; margin-top: -15px;'>d<span style='color: #FFFFFF;'>AI</span>ly digest</h1>", unsafe_allow_html=True)
     
     # Clean product introduction
-    st.write(
-        "Welcome to dAIly digest, a professional platform designed to aggregate, "
-        "analyze, and synthesize the rapidly evolving landscape of artificial intelligence. "
-        "By automating manual research workflows, dAIly digest helps AI professionals, "
-        "researchers, and technology leaders stay informed with deep, clean, and actionable insights."
+    st.markdown(
+        "<div style='text-align: center; max-width: 800px; margin: 10px auto 40px auto;'>"
+        "<p style='font-size: 1.1rem; color: #94A3B8; line-height: 1.6;'>"
+        "dAIly digest is an AI-powered intelligence platform built to simplify how professionals consume and interact with rapidly evolving technology news. From automated AI digests to conversational retrieval and universal news summarization, the platform transforms scattered information into structured, actionable insights."
+        "</p></div>", 
+        unsafe_allow_html=True
     )
     
-    st.write("") # Spacer
-    
     # Explaining the 4 pillars (no emojis, minimal and professional layout)
-    st.subheader("Core Capabilities")
-    
     col1, col2 = st.columns(2)
     with col1:
-        st.write("#### Automated Daily AI Digests")
-        st.write(
-            "Compile and generate comprehensive summaries of the day's most critical "
-            "AI breakthroughs, research paper publications, and corporate news with a single click. "
-            "Receive structured intelligence designed for quick scanning and consumption."
-        )
+        with st.container(border=True):
+            st.write("#### Daily AI Digest")
+            st.write(
+               "Generate curated summaries of the latest AI developments across research, infrastructure, enterprise adoption, and model releases using live RSS ingestion and AI-powered synthesis." 
+            )
         
-        st.write("#### Retrieval-Augmented AI Assistance")
-        st.write(
-            "Engage in conversations with an intelligent assistant trained on deep AI history "
-            "and contemporary breakthroughs. Ask questions, compare model paradigms, and "
-            "explore the evolutionary lineage of AI theories and architectures."
-        )
-        
+        with st.container(border=True):
+            st.write("#### AI Digest Assistant")
+            st.write(
+                "Interact with a conversational RAG assistant capable of retrieving historical AI intelligence, contextualizing industry developments, and answering follow-up questions with temporal and metadata awareness."
+            )
+            
     with col2:
-        st.write("#### Universal News Summarizer")
-        st.write(
-            "Paste any news article URL to instantly scrape, "
-            "clean, and structure the content. Extract core summaries and key announcements, "
-            "and calculate sentiment indices automatically using active multi-provider LLM routing."
-        )
-        
-        st.write("#### LinkedIn-Ready Content Generation")
-        st.write(
-            "Bridge the gap between news analysis and professional outreach. "
-            "Convert any extracted article summary into a polished, educational, and high-impact "
-            "LinkedIn post tailored for professionals, students, and lifelong learners."
-        )
-
-    st.write("---")
-    
+        with st.container(border=True):
+            st.write("#### Universal News Summarizer")
+            st.write(
+                "Paste any news article URL — AI-related or not — to automatically scrape, summarize, extract key insights, and analyze overall sentiment using multi-provider LLM routing."
+            )
+            
+        with st.container(border=True):
+            st.write("#### LinkedIn Post Generation")
+            st.write(
+                "Convert summarized news into concise, professional LinkedIn-ready posts designed for technical storytelling, industry awareness, and knowledge sharing."
+            )
+            
     # Platform Vision section
-    st.subheader("Platform Vision")
-    st.write(
-        "The velocity of AI advancement is outpacing traditional news distribution and consumption structures. "
-        "Our vision is to build a noise-filtering layer for the tech industry—empowering professionals with "
-        "high-fidelity information streams and automated distribution engines, allowing teams to focus on "
-        "integration, development, and strategic execution."
+    st.markdown(
+        "<div class='vision-section'>"
+        "Transforming real-time information into conversational intelligence."
+        "</div>", 
+        unsafe_allow_html=True
     )
 
 
@@ -352,7 +342,14 @@ def render_summarizer_page():
                     f"<span class='sentiment-badge {sentiment_class}'>{sentiment_label}</span>",
                     unsafe_allow_html=True
                 )
-                st.write(sentiment_label)
+                
+                # Explanation below sentiment
+                if sentiment_label == "Positive":
+                    st.caption("Indicates a favorable outlook or constructive tone.")
+                elif sentiment_label == "Negative":
+                    st.caption("Indicates a critical perspective or concerning tone.")
+                else:
+                    st.caption("Indicates a balanced, objective, or factual tone.")
                 
         # Subtle provider and metadata lines
         st.caption(f"Routed LLM: {data['provider']} | Status: Successfully Routed")
@@ -507,8 +504,8 @@ def render_rag_assistant():
                                 meta.append(f"Source: {source['source']}")
                             if source.get("published"):
                                 meta.append(f"Published: {source['published']}")
-                            if source.get("similarity") is not None:
-                                meta.append(f"Similarity: {source['similarity']:.2f}")
+                            # if source.get("similarity") is not None:
+                            #     meta.append(f"Similarity: {source['similarity']:.2f}")
                             if meta:
                                 st.caption(" | ".join(meta))
                             if source.get("url"):

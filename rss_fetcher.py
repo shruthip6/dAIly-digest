@@ -261,19 +261,10 @@ def _fetch_feed(url: str, source_name: str) -> List[Article]:
     raw_count = len(parsed.entries)
     logger.info("Parsed %d entries from %s", raw_count, source_name)
 
-    today_str = datetime.now().strftime("%Y-%m-%d")
-
     articles: List[Article] = []
     for entry in parsed.entries:
         article = _parse_entry(entry, source_name)
         if article is None:
-            continue
-
-        # Current Date check: Skip articles not published today
-        if article.published.strftime("%Y-%m-%d") != today_str:
-            logger.debug(
-                "Filtered out (older date): '%s' from %s", article.title, source_name
-            )
             continue
 
         # AI relevance gate – use the RSS summary/description if available.
@@ -333,9 +324,23 @@ def fetch_latest_ai_news(max_articles: int = 3) -> List[Mapping[str, str]]:
         return []
 
     # Step 1 – fetch and AI-filter each feed individually, preserving catalogue order.
-    feed_buckets: Dict[str, List[Article]] = {}
+    feed_buckets_raw: Dict[str, List[Article]] = {}
     for source, feed_url in _FEED_CATALOGUE.items():
-        feed_buckets[source] = _fetch_feed(feed_url, source)
+        feed_buckets_raw[source] = _fetch_feed(feed_url, source)
+        
+    # Find the most recent date with available articles
+    all_articles = [a for bucket in feed_buckets_raw.values() for a in bucket]
+    if not all_articles:
+        logger.info("No AI-relevant articles found across any feeds.")
+        return []
+        
+    latest_date_str = max(a.published.strftime("%Y-%m-%d") for a in all_articles)
+    logger.info("Most recent available articles found on: %s", latest_date_str)
+    
+    # Filter the buckets to only include articles from the latest available date
+    feed_buckets: Dict[str, List[Article]] = {}
+    for source, bucket in feed_buckets_raw.items():
+        feed_buckets[source] = [a for a in bucket if a.published.strftime("%Y-%m-%d") == latest_date_str]
 
     # Step 2 – round-robin selection across feeds.
     selected: List[Article] = []

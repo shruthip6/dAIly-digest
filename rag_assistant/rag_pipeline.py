@@ -305,7 +305,7 @@ def answer_ai_query(user_query: str, session_context=None) -> Dict[str, Any]:
         # Step 3 — retrieve with optional metadata filters.
         retrieved_documents = retrieve_documents(
             augmented_query,
-            top_k=3,
+            top_k=10,
             source_filter=source_filter,
             date_filter=date_filter,
         )
@@ -344,12 +344,12 @@ def answer_ai_query(user_query: str, session_context=None) -> Dict[str, Any]:
             "6. Be concise, professional, analytical, and clear.\n"
             "7. When useful, synthesize insights across multiple retrieved sources.\n"
             "8. For historical or ecosystem questions, provide contextual explanation rather than one-line answers.\n"
-            "9. If the question is unrelated to AI, technology, or the knowledge base, respond briefly and redirect "
-            "the user toward AI-related queries.\n"
-            "10. If retrieved context is insufficient, explicitly say:\n"
+            "10. If the question is unrelated to AI or technology, you MUST refuse to answer and explicitly say: 'I can't tell you about it'. Do not provide any further information on the unrelated topic.\n"
+            "11. If the question is unclear or gibberish, explicitly say 'I can't understand the question.' \n"
+            "12. If retrieved context is insufficient, explicitly say:\n"
             "'The retrieved knowledge base does not contain direct information about this topic, "
             "but based on broader AI knowledge...'\n"
-            "11. Maintain conversational continuity — if the user is following up on a previous question, "
+            "13. Maintain conversational continuity — if the user is following up on a previous question, "
             "acknowledge the context naturally.\n\n"
 
             "IMPORTANT:\n"
@@ -380,11 +380,18 @@ def answer_ai_query(user_query: str, session_context=None) -> Dict[str, Any]:
                 "error": result.get("error"),
             }
 
+        answer_text = result.get("response", "")
+        # Clear sources if the query was rejected as out-of-context or gibberish
+        if "i can't tell you about it" in answer_text.lower() or "i can't understand the question" in answer_text.lower():
+            final_sources = []
+        else:
+            final_sources = _build_sources(retrieved_documents)
+
         return {
             "success": True,
             "provider": result.get("provider"),
-            "answer": result.get("response"),
-            "sources": _build_sources(retrieved_documents),
+            "answer": answer_text,
+            "sources": final_sources,
             "error": None,
         }
     except Exception as exc:
