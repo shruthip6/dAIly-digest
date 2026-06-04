@@ -81,7 +81,7 @@ class Article:
 # Order is preserved and drives round-robin article selection.
 # ---------------------------------------------------------------------------
 _FEED_CATALOGUE: Mapping[str, str] = {
-    "TLDR AI": "https://tldr.tech/api/r ss/ai",
+    "TLDR AI": "https://tldr.tech/api/rss/ai",
     "AI Feed": "https://aifeed.dev/feed.xml",
     "Wired AI:": "https://www.wired.com/feed/tag/ai/latest/rss",
     # "VentureBeat AI": "https://venturebeat.com/category/ai/feed",
@@ -328,7 +328,7 @@ def fetch_latest_ai_news(max_articles: int = 3) -> List[Mapping[str, str]]:
     for source, feed_url in _FEED_CATALOGUE.items():
         feed_buckets_raw[source] = _fetch_feed(feed_url, source)
         
-    # Find the most recent date with available articles
+    # Collect all available articles
     all_articles = [a for bucket in feed_buckets_raw.values() for a in bucket]
     if not all_articles:
         logger.info("No AI-relevant articles found across any feeds.")

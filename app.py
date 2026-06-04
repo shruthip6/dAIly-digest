@@ -418,8 +418,7 @@ def render_rag_assistant():
                             meta.append(f"Source: {source['source']}")
                         if source.get("published"):
                             meta.append(f"Published: {source['published']}")
-                        if source.get("similarity") is not None:
-                            meta.append(f"Similarity: {source['similarity']:.2f}")
+                        # Similarity score removed as requested
                         if meta:
                             st.caption(" | ".join(meta))
                         if source.get("url"):
