@@ -1,10 +1,16 @@
 import logging
+from datetime import datetime
 from typing import List, Dict, Any
 
 # Local imports
 from rss_fetcher import fetch_latest_ai_news
 from utils.scraper import extract_article
 from utils.summarizer import summarize_article
+
+try:
+    from rag_assistant.chroma_manager import add_document
+except ImportError:
+    from chroma_manager import add_document
 
 # Configure module logger
 logging.basicConfig(
@@ -52,6 +58,8 @@ def generate_daily_digest(max_articles: int = 3) -> List[Dict[str, Any]]:
             "provider": None,
             "success": False,
             "error": None,
+            "ingested": False,
+            "ingested_date": None,
         }
 
         url = article_record["url"]
@@ -99,6 +107,21 @@ def generate_daily_digest(max_articles: int = 3) -> List[Dict[str, Any]]:
         article_record["provider"] = summary_result.get("provider")
         article_record["success"] = True
         article_record["error"] = None
+
+        ingested_date = datetime.now().date().isoformat()
+        article_record["ingested_date"] = ingested_date
+        try:
+            article_record["ingested"] = add_document(
+                title=article_record.get("title") or "Untitled",
+                summary=article_record.get("summary") or "",
+                source=article_record.get("source") or "Unknown",
+                url=article_record.get("url") or "",
+                published=article_record.get("published") or "",
+                ingested_date=ingested_date,
+            )
+        except Exception as exc:
+            logger.warning("ChromaDB ingestion failed for %s: %s", url, exc)
+            article_record["ingested"] = False
         digest.append(article_record)
         logger.info("Processed article: %s", article_record["title"])
 

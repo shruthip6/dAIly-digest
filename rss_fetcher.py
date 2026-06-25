@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 import sys
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Mapping, Optional
 
 import feedparser
@@ -334,13 +334,19 @@ def fetch_latest_ai_news(max_articles: int = 3) -> List[Mapping[str, str]]:
         logger.info("No AI-relevant articles found across any feeds.")
         return []
         
-    latest_date_str = max(a.published.strftime("%Y-%m-%d") for a in all_articles)
+    latest_date = max(a.published.date() for a in all_articles)
+    latest_date_str = latest_date.strftime("%Y-%m-%d")
+    previous_date_str = (latest_date - timedelta(days=1)).strftime("%Y-%m-%d")
     logger.info("Most recent available articles found on: %s", latest_date_str)
+    logger.info("Including previous-day articles from: %s", previous_date_str)
     
-    # Filter the buckets to only include articles from the latest available date
+    # Filter the buckets to include the latest available day and the previous day.
     feed_buckets: Dict[str, List[Article]] = {}
+    allowed_dates = {latest_date_str, previous_date_str}
     for source, bucket in feed_buckets_raw.items():
-        feed_buckets[source] = [a for a in bucket if a.published.strftime("%Y-%m-%d") == latest_date_str]
+        feed_buckets[source] = [
+            a for a in bucket if a.published.strftime("%Y-%m-%d") in allowed_dates
+        ]
 
     # Step 2 – round-robin selection across feeds.
     selected: List[Article] = []

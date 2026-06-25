@@ -1,7 +1,9 @@
 import hashlib
 import logging
+import re
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import chromadb
 
@@ -15,10 +17,14 @@ try:
 except ImportError:
     Document = None
 
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 logger = logging.getLogger("chroma_manager")
 
 CHROMA_DB_PATH = Path("chroma_db")
 COLLECTION_NAME = "ai_digest_knowledge"
+DEFAULT_CHUNK_SIZE = 900
+DEFAULT_CHUNK_OVERLAP = 150
 
 
 def _get_collection():
@@ -32,14 +38,56 @@ def _document_id(title: str, source: str, url: str) -> str:
     return hashlib.sha256(raw_id.encode("utf-8")).hexdigest()
 
 
+def _today_iso() -> str:
+    return datetime.now().date().isoformat()
+
+
+def _normalize_date(value: Optional[str]) -> str:
+    """Return YYYY-MM-DD when a date-like string is available."""
+    if not value:
+        return ""
+
+    value = str(value).strip()
+    if not value:
+        return ""
+
+    match = re.match(r"^\d{4}-\d{2}-\d{2}", value)
+    if match:
+        return match.group(0)
+
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).date().isoformat()
+    except ValueError:
+        return value
+
+
+def chunk_text(
+    text: str,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+) -> List[str]:
+    """Split text into overlapping chunks before embedding."""
+    if not text or not str(text).strip():
+        return []
+
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=["\n\n", "\n", ". ", "? ", "! ", " ", ""],
+    )
+    return [chunk.strip() for chunk in splitter.split_text(str(text).strip()) if chunk.strip()]
+
+
 def add_document(
     title: str,
     summary: str,
     source: str = "Unknown",
     url: str = "",
-    published: str = ""
+    published: str = "",
+    ingested_date: str = None,
 ) -> bool:
-    """Add a digest or knowledge-base document to ChromaDB, skipping duplicates safely."""
+    """Add a digest or knowledge-base document to ChromaDB as embedded chunks."""
     if not summary or not str(summary).strip():
         logger.warning("Skipping ChromaDB insert because summary is empty: %s", title)
         return False
@@ -47,32 +95,50 @@ def add_document(
     try:
         collection = _get_collection()
         doc_id = _document_id(title, source, url)
-        existing = collection.get(ids=[doc_id])
+        first_chunk_id = f"{doc_id}:chunk:0"
+        existing = collection.get(ids=[doc_id, first_chunk_id])
         if existing and existing.get("ids"):
             logger.info("Skipping duplicate ChromaDB document: %s", title)
             return False
 
+        normalized_published = _normalize_date(published)
+        normalized_ingested_date = _normalize_date(ingested_date) or _today_iso()
         document_text = (
             f"Title: {title or 'Untitled'}\n"
             f"Source: {source or 'Unknown'}\n"
-            f"Published: {published or 'Unknown'}\n\n"
+            f"Published: {published or 'Unknown'}\n"
+            f"Ingested Date: {normalized_ingested_date}\n\n"
             f"{summary}"
         )
-        embedding = generate_embedding(document_text)
+        chunks = chunk_text(document_text)
+        if not chunks:
+            logger.warning("Skipping ChromaDB insert because chunking produced no text: %s", title)
+            return False
 
-        collection.add(
-            ids=[doc_id],
-            documents=[document_text],
-            embeddings=[embedding],
-            metadatas=[{
+        ids = [f"{doc_id}:chunk:{idx}" for idx, _ in enumerate(chunks)]
+        embeddings = [generate_embedding(chunk) for chunk in chunks]
+        metadatas = []
+        for idx, chunk in enumerate(chunks):
+            metadatas.append({
+                "document_id": doc_id,
+                "chunk_index": idx,
+                "chunk_count": len(chunks),
                 "title": title or "Untitled",
                 "source": source or "Unknown",
                 "url": url or "",
                 "published": published or "",
-                "summary": summary
-            }]
+                "published_date": normalized_published,
+                "ingested_date": normalized_ingested_date,
+                "summary": summary,
+            })
+
+        collection.add(
+            ids=ids,
+            documents=chunks,
+            embeddings=embeddings,
+            metadatas=metadatas,
         )
-        logger.info("Stored document in ChromaDB: %s", title)
+        logger.info("Stored document in ChromaDB as %d chunk(s): %s", len(chunks), title)
         return True
     except Exception as exc:
         logger.error("Failed to add document to ChromaDB: %s", exc)
@@ -188,15 +254,21 @@ def _query_and_filter(
             if stored_source.lower() != source_filter.lower():
                 continue
 
-        # --- Python-side date matching (startswith for timestamp compat) ---
-        # Future ingestions should normalize published dates into: YYYY-MM-DD
-        # but the retrieval layer must remain backward compatible
-        # with older timestamp metadata already stored in ChromaDB.
+        # --- Python-side date matching (ingested_date first, published fallback) ---
+        # Older ChromaDB rows may not have ingested_date, so published remains
+        # a backward-compatible fallback for already stored documents.
         if date_filter:
+            stored_ingested_date = (metadata.get("ingested_date") or "").strip()
+            stored_published_date = (metadata.get("published_date") or "").strip()
             stored_published = (metadata.get("published") or "").strip()
-            if not stored_published.startswith(date_filter):
+            candidate_dates = [
+                stored_ingested_date,
+                stored_published_date,
+                stored_published,
+            ]
+            if not any(candidate.startswith(date_filter) for candidate in candidate_dates if candidate):
                 continue
-            logger.info("Matched document published date:\n%s", stored_published)
+            logger.info("Matched document date filter %s for %s", date_filter, metadata.get("title", "Untitled"))
 
         langchain_document = None
         if Document:
@@ -213,4 +285,3 @@ def _query_and_filter(
         })
 
     return matches
-
