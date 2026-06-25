@@ -562,7 +562,7 @@ def render_daily_digest():
         "Number of AI articles to fetch",
         min_value=1,
         max_value=10,
-        value=5,
+        value=1,
         step=1
     )
 

@@ -24,12 +24,12 @@ def generate_with_cohere(prompt: str) -> str:
         
     return response.text
 
-# if __name__ == "__main__":
-#     try:
-#         print("Testing Cohere Provider...")
-#         test_prompt = "Summarize today's AI industry trends in 3 bullet points."
-#         result = generate_with_cohere(test_prompt)
-#         print("\nCOHERE RESPONSE:\n")
-#         print(result)
-#     except Exception as e:
-#         print(f"Error occurred: {e}")
+if __name__ == "__main__":
+    try:
+        print("Testing Cohere Provider...")
+        test_prompt = "Summarize today's AI industry trends in 3 bullet points."
+        result = generate_with_cohere(test_prompt)
+        print("\nCOHERE RESPONSE:\n")
+        print(result)
+    except Exception as e:
+        print(f"Error occurred: {e}")
